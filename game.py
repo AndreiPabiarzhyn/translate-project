@@ -1,0 +1,47 @@
+import sounddevice as sd
+import numpy as np
+import scipy.io.wavfile as wav
+import speech_recognition as sr 
+import time
+from googletrans import Translator
+
+
+duration = 5
+sample_rate = 44100
+
+print("="* 70 + "\n")
+print("Программа запишет твой голос и сделает транскрибацию речи")
+time.sleep(1)
+print("Запись пошла. ГОВОРИ!!!!...")
+time.sleep(0.5)
+
+recording = sd.rec(
+  int(duration * sample_rate), # длительность записи в сэмплах
+  samplerate=sample_rate,      # частота дискретизации
+  channels=1,                  # 1 — это моно
+  dtype="int16")               # формат аудиоданных
+sd.wait()  # ждём завершения записи
+
+wav.write("newaudio.wav" , sample_rate, recording)
+time.sleep(0.5)
+print("Запись завершена. Идет постобработка файла...\n")
+time.sleep(0.5)
+
+
+recognizer = sr.Recognizer()
+translator = Translator()
+
+with sr.AudioFile("newaudio.wav") as source:
+    audio = recognizer.record(source)
+
+try:
+    text = recognizer.recognize_google(audio, language="ru-RU")
+    print(text)
+    translated = translator.translate(text, dest='en')  # здесь 'en' — это английский
+    print("🌍 Перевод на английский:", translated.text)
+except sr.UnknownValueError:
+    print("Я ничего не понял, что ты там бормочешь...")
+except sr.RequestError as e:
+    print("Я не могу достучаться до сервера, вот ошибка:", e)
+
+
